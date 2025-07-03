@@ -45,7 +45,10 @@ export function useHyperlane() {
 
           setCurrentTransaction(confirmedTransaction)
 
-          const updatedHistory = messageHistory.map((msg) => (msg.id === transaction.id ? confirmedTransaction : msg))
+          // Get fresh history from localStorage to avoid stale state
+          const stored = localStorage.getItem("hyperlane_messages")
+          const currentHistory = stored ? JSON.parse(stored) : []
+          const updatedHistory = currentHistory.map((msg: CrossChainTransaction) => (msg.id === transaction.id ? confirmedTransaction : msg))
           saveMessageHistory(updatedHistory)
 
           // Simulate destination transaction (8-15 seconds after source)
@@ -59,7 +62,10 @@ export function useHyperlane() {
 
               setCurrentTransaction(deliveredTransaction)
 
-              const finalHistory = messageHistory.map((msg) => (msg.id === transaction.id ? deliveredTransaction : msg))
+              // Get fresh history again for final update
+              const storedFinal = localStorage.getItem("hyperlane_messages")
+              const finalCurrentHistory = storedFinal ? JSON.parse(storedFinal) : []
+              const finalHistory = finalCurrentHistory.map((msg: CrossChainTransaction) => (msg.id === transaction.id ? deliveredTransaction : msg))
               saveMessageHistory(finalHistory)
               
               // Show success notification when message is delivered
@@ -75,7 +81,7 @@ export function useHyperlane() {
         Math.random() * 3000 + 2000,
       ) // 2-5 seconds
     },
-    [messageHistory, saveMessageHistory],
+    [saveMessageHistory],
   )
 
   const sendMessage = async (params: SendMessageParams) => {
