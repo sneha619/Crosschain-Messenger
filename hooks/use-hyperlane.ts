@@ -5,6 +5,7 @@ export {}
 
 import { useState, useEffect, useCallback } from "react"
 import type { CrossChainTransaction, SendMessageParams } from "@/types"
+import { toast } from "@/hooks/use-toast"
 
 export function useHyperlane() {
   const [isLoading, setIsLoading] = useState(false)
@@ -60,6 +61,13 @@ export function useHyperlane() {
 
               const finalHistory = messageHistory.map((msg) => (msg.id === transaction.id ? deliveredTransaction : msg))
               saveMessageHistory(finalHistory)
+              
+              // Show success notification when message is delivered
+              toast({
+                title: "Message Successfully Delivered",
+                description: "Your cross-chain message has been successfully delivered to the destination chain",
+                variant: "default",
+              })
             },
             Math.random() * 7000 + 8000,
           ) // 8-15 seconds

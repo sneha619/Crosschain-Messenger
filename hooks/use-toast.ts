@@ -7,9 +7,9 @@ import type {
 } from "@/components/ui/toast"
 
 // Maximum number of toasts to show at once
-const TOAST_LIMIT = 1
+const TOAST_LIMIT = 3
 // Delay before removing toast from DOM after closing (in milliseconds)
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string

@@ -145,6 +145,7 @@ export function useWalletEnhanced() {
                   chainName: targetChain.name,
                   rpcUrls: [targetChain.rpcUrl],
                   blockExplorerUrls: [targetChain.blockExplorer],
+                  nativeCurrency: targetChain.nativeCurrency,
                 },
               ],
             })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -103,6 +103,18 @@ export default function CrossChainMessenger() {
   const { sendMessage, isLoading, error, currentTransaction, messageHistory, refreshHistory } = useHyperlane()
   const { gasEstimate: rawGasEstimate, isEstimating, estimateGas } = useGasFees()
   const gasEstimate = rawGasEstimate || null
+  
+  // Refresh message history when component mounts and when currentTransaction changes
+  useEffect(() => {
+    refreshHistory()
+    // Set up an interval to refresh message history every 5 seconds
+    const intervalId = setInterval(() => {
+      refreshHistory()
+    }, 5000)
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId)
+  }, [refreshHistory, currentTransaction])
 
   const validateField = async (field: string, value: string) => {
     setIsValidating((prev) => ({ ...prev, [field]: true }))
@@ -184,6 +196,16 @@ export default function CrossChainMessenger() {
   }
 
   const handleSendMessage = async () => {
+    // Check if wallet is connected first
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to send cross-chain messages",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!message.trim()) {
       toast({
         title: "Empty Message",
@@ -253,14 +275,17 @@ export default function CrossChainMessenger() {
       })
     }
   }
-
-  const isFormValid =
+  
+  const isFormValid = useMemo(() => {
+  return Boolean(
     message.trim() &&
+    recipient.trim() &&
     sourceChain &&
     destinationChain &&
-    recipient.trim() &&
     sourceChain !== destinationChain &&
-    Object.values(validationErrors).every((error) => !error)
+    Object.values(validationErrors).every((e) => !e)
+  );
+}, [message, recipient, sourceChain, destinationChain, validationErrors]);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -438,6 +463,19 @@ export default function CrossChainMessenger() {
                           )}
                         </Button>
                       </motion.div>
+                      
+                      {/* Connection Required Notice */}
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-4 text-center"
+                      >
+                        <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                          <AlertTriangle className="w-4 h-4 mr-2" />
+                          Wallet connection required to send messages
+                        </p>
+                      </motion.div>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -493,65 +531,68 @@ export default function CrossChainMessenger() {
                 </CardHeader>
                 <CardContent className="relative space-y-6">
                   {/* Chain Selection */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EnhancedFormValidator error={validationErrors.sourceChain} isValidating={isValidating.sourceChain}>
-                      <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Source Chain</Label>
-                      <Select value={sourceChain} onValueChange={(value) => handleChainChange("sourceChain", value)}>
-                        <SelectTrigger className="h-12 bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300">
-                          <SelectValue placeholder="Select source blockchain" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-                          {SUPPORTED_CHAINS.map((chain) => (
-                            <SelectItem key={chain.id} value={chain.id.toString()}>
-                              <motion.div
-                                className="flex items-center gap-3"
-                                whileHover={{ x: 4 }}
-                                transition={{ type: "spring", stiffness: 300 }}
-                              >
-                                <div className={`w-4 h-4 rounded-full ${chain.color} shadow-lg`} />
-                                <span className="font-medium">{chain.name}</span>
-                              </motion.div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </EnhancedFormValidator>
-
-                    <EnhancedFormValidator
-                      error={validationErrors.destinationChain}
-                      isValidating={isValidating.destinationChain}
-                    >
-                      <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Destination Chain
-                      </Label>
-                      <Select
-                        value={destinationChain}
-                        onValueChange={(value) => handleChainChange("destinationChain", value)}
+                  <div className="flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0">
+                    <div className="w-full md:w-1/2 flex-1">
+                      <EnhancedFormValidator error={validationErrors.sourceChain} isValidating={isValidating.sourceChain}>
+                        <Label className="text-sm mb-[4px] pl-1 font-semibold text-gray-700 dark:text-gray-300">Source Chain</Label>
+                        <Select value={sourceChain} onValueChange={(value) => handleChainChange("sourceChain", value)}>
+                          <SelectTrigger className="h-12 w-full bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300">
+                            <SelectValue placeholder="Select source blockchain" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
+                            {SUPPORTED_CHAINS.map((chain) => (
+                              <SelectItem key={chain.id} value={chain.id.toString()}>
+                                <motion.div
+                                  className="flex items-center gap-3"
+                                  whileHover={{ x: 4 }}
+                                  transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                  <div className={`w-4 h-4 rounded-full ${chain.color} shadow-lg`} />
+                                  <span className="font-medium">{chain.name}</span>
+                                </motion.div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </EnhancedFormValidator>
+                    </div>
+                    <div className="w-full md:w-1/2 flex-1">
+                      <EnhancedFormValidator
+                        error={validationErrors.destinationChain}
+                        isValidating={isValidating.destinationChain}
                       >
-                        <SelectTrigger className="h-12 bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300">
-                          <SelectValue placeholder="Select destination blockchain" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
-                          {SUPPORTED_CHAINS.map((chain) => (
-                            <SelectItem key={chain.id} value={chain.id.toString()}>
-                              <motion.div
-                                className="flex items-center gap-3"
-                                whileHover={{ x: 4 }}
-                                transition={{ type: "spring", stiffness: 300 }}
-                              >
-                                <div className={`w-4 h-4 rounded-full ${chain.color} shadow-lg`} />
-                                <span className="font-medium">{chain.name}</span>
-                              </motion.div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </EnhancedFormValidator>
+                        <Label className="text-sm mb-[4px] pl-1 font-semibold text-gray-700 dark:text-gray-300">
+                          Destination Chain
+                        </Label>
+                        <Select
+                          value={destinationChain}
+                          onValueChange={(value) => handleChainChange("destinationChain", value)}
+                        >
+                          <SelectTrigger className="h-12 w-full bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-300">
+                            <SelectValue placeholder="Select destination blockchain" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl">
+                            {SUPPORTED_CHAINS.map((chain) => (
+                              <SelectItem key={chain.id} value={chain.id.toString()}>
+                                <motion.div
+                                  className="flex items-center gap-3"
+                                  whileHover={{ x: 4 }}
+                                  transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                  <div className={`w-4 h-4 rounded-full ${chain.color} shadow-lg`} />
+                                  <span className="font-medium">{chain.name}</span>
+                                </motion.div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </EnhancedFormValidator>
+                    </div>
                   </div>
 
                   {/* Recipient Address */}
                   <EnhancedFormValidator error={validationErrors.recipient} isValidating={isValidating.recipient}>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recipient Address</Label>
+                    <Label className="text-sm mb-[4px] pl-1 font-semibold text-gray-700 dark:text-gray-300">Recipient Address</Label>
                     <Input
                       placeholder="0x... Enter the recipient's wallet address"
                       value={recipient}
@@ -562,7 +603,7 @@ export default function CrossChainMessenger() {
 
                   {/* Message Input */}
                   <EnhancedFormValidator error={validationErrors.message} isValidating={isValidating.message}>
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Message Content</Label>
+                    <Label className="text-sm font-semibold mb-[4px] pl-1 text-gray-700 dark:text-gray-300">Message Content</Label>
                     <Textarea
                       placeholder="Type your cross-chain message here..."
                       value={message}
@@ -572,7 +613,7 @@ export default function CrossChainMessenger() {
                       className="resize-none bg-white/50 dark:bg-gray-800/50 border-gray-300 dark:border-gray-600 hover:border-pink-400 dark:hover:border-pink-500 focus:border-pink-500 dark:focus:border-pink-400 transition-all duration-300"
                     />
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Maximum 1000 characters</span>
+                      <span className="text-gray-500 mt-[4px] pl-1 dark:text-gray-400">Maximum 1000 characters</span>
                       <motion.span
                         className="font-medium"
                         animate={{
@@ -605,9 +646,9 @@ export default function CrossChainMessenger() {
                       </Alert>
                     </motion.div>
                   )}
-
+                  
                   {/* Send Button */}
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>                  
                     <Button
                       onClick={handleSendMessage}
                       disabled={!isConnected || !isFormValid || isLoading}
@@ -618,6 +659,11 @@ export default function CrossChainMessenger() {
                           <RefreshCw className="w-5 h-5 mr-3 animate-spin" />
                           Sending Message...
                         </>
+                      ) : !isConnected ? (
+                        <>
+                          <Wallet className="w-5 h-5 mr-3" />
+                          Connect Wallet to Send
+                        </>
                       ) : (
                         <>
                           <Send className="w-5 h-5 mr-3" />
@@ -626,6 +672,22 @@ export default function CrossChainMessenger() {
                       )}
                     </Button>
                   </motion.div>
+                  
+                  {/* Wallet Connection Notice */}
+                  {!isConnected && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4"
+                    >
+                      <Alert variant="destructive" className="border-red-200 dark:border-red-800 py-2 px-3">
+                        <XCircle className="h-4 w-4 mr-2" />
+                        <AlertDescription className="text-sm font-medium">
+                          Please connect your wallet to send cross-chain messages
+                        </AlertDescription>
+                      </Alert>
+                    </motion.div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
