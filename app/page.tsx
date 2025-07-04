@@ -30,7 +30,7 @@ import {
 import { MessageHistory } from "@/components/message-history"
 import { StatusTracker } from "@/components/status-tracker"
 import { EnhancedThemeToggle } from "@/components/enhanced-theme-toggle"
-import { SimpleThemeToggle } from "@/components/simple-theme-toggle"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { GasFeeEstimator } from "@/components/gas-fee-estimator"
 import { EnhancedFormValidator } from "@/components/enhanced-form-validation"
 import { LoadingSpinner } from "@/components/loading-spinner"
@@ -332,7 +332,7 @@ export default function CrossChainMessenger() {
               </motion.div>
 
               <div className="flex items-center gap-3">
-                <SimpleThemeToggle />
+                <ThemeToggle />
                 <Separator orientation="vertical" className="h-6" />
                 <EnhancedThemeToggle />
               </div>

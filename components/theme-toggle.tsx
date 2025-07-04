@@ -25,13 +25,8 @@ export function ThemeToggle() {
   const currentTheme = theme === "system" ? systemTheme : theme
 
   const cycleTheme = () => {
-    if (theme === "light") {
-      setTheme("dark")
-    } else if (theme === "dark") {
-      setTheme("system")
-    } else {
-      setTheme("light")
-    }
+    // Simplified toggle between light and dark
+    setTheme(currentTheme === "light" ? "dark" : "light")
   }
 
   const getThemeIcon = () => {
@@ -46,16 +41,7 @@ export function ThemeToggle() {
   }
 
   const getThemeLabel = () => {
-    switch (theme) {
-      case "light":
-        return "Switch to dark mode"
-      case "dark":
-        return "Switch to system mode"
-      case "system":
-        return "Switch to light mode"
-      default:
-        return "Toggle theme"
-    }
+    return currentTheme === "light" ? "Switch to dark mode" : "Switch to light mode"
   }
 
   return (
@@ -69,7 +55,7 @@ export function ThemeToggle() {
       >
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${theme}-${currentTheme}`}
+            key={currentTheme}
             initial={{ scale: 0, rotate: -180, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             exit={{ scale: 0, rotate: 180, opacity: 0 }}
