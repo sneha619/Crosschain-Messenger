@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Cross-Chain Messenger",
-  description: "Send messages across different blockchains with beautiful animations",
+  description: "Send messages across different blockchains",
 }
 
 export const viewport = {
