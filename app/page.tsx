@@ -35,7 +35,7 @@ import { GasFeeEstimator } from "@/components/gas-fee-estimator"
 import { EnhancedFormValidator } from "@/components/enhanced-form-validation"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { FloatingElements } from "@/components/floating-elements"
-import { NetworkVisualization } from "@/components/network-visualisation"
+import { SVGNetworkVisualization } from "@/components/svg-network-visualization"
 import { useWalletEnhanced } from "@/hooks/use-wallet-enhanced"
 import { useHyperlane } from "@/hooks/use-hyperlane"
 import { useGasFees } from "@/hooks/use-gas-fees"
@@ -296,7 +296,7 @@ export default function CrossChainMessenger() {
       <FloatingElements />
 
       {/* Network Visualization */}
-      <NetworkVisualization />
+      <SVGNetworkVisualization />
 
       {/* Main Content */}
       <motion.div

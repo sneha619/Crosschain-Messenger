@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
-export function NetworkVisualization() {
+export function SVGNetworkVisualization() {
   const [nodes, setNodes] = useState<Array<{ x: number; y: number; id: number }>>([])  
   const [isMounted, setIsMounted] = useState(false)
 
