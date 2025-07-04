@@ -53,11 +53,9 @@ export class BlockchainIntegration {
     return balance
   }
 
-  // 2. SMART CONTRACT CALLS without ethers.js
   async callContract(contractCall: ContractCall): Promise<unknown> {
     if (!this.provider) throw new Error("No provider")
 
-    // Encode function call manually or use web3-eth-abi
     const functionSignature = this.encodeFunctionCall(contractCall.methodName, contractCall.params)
 
     const result = await this.provider.request({
@@ -101,11 +99,9 @@ export class BlockchainIntegration {
     return txHash
   }
 
-  // 3. EVENT LISTENING without ethers.js
   async listenForEvents(contractAddress: string, eventSignature: string, callback: (event: unknown) => void) {
     if (!this.provider) throw new Error("No provider")
 
-    // Create event filter
     const filter = {
       address: contractAddress,
       topics: [eventSignature],
@@ -127,17 +123,16 @@ export class BlockchainIntegration {
           callback(decodedEvent)
         })
 
-        // Update filter to only get new events
+        // Updating filter to only get new events
         filter.fromBlock = "latest"
       } catch (error) {
         console.error("Error polling for events:", error)
       }
-    }, 5000) // Poll every 5 seconds
+    }, 5000) 
 
     return () => clearInterval(pollInterval)
   }
 
-  // 4. CHAIN SWITCHING without ethers.js
   async switchChain(chainId: number): Promise<void> {
     if (!this.provider) throw new Error("No provider")
 
@@ -149,7 +144,7 @@ export class BlockchainIntegration {
         params: [{ chainId: hexChainId }],
       })
     } catch (error) {
-      // Chain not added to wallet
+     
       const errorObj = error as { code: number };
       if (errorObj.code === 4902) {
         await this.addChain(chainId)
@@ -209,13 +204,11 @@ export class BlockchainIntegration {
   }
 
   private decodeFunctionResult(result: string): unknown {
-    // Decode the result based on ABI
     // This is a simplified version
     return result
   }
 
   private decodeEventLog(log: unknown): unknown {
-    // Decode event log data
     // Type assertion for log to access properties
     const typedLog = log as {
       address: string;
@@ -235,7 +228,6 @@ export class BlockchainIntegration {
   }
 }
 
-// Cross-chain messaging implementation without ethers.js
 export class CrossChainMessaging {
   private blockchain: BlockchainIntegration
 
@@ -249,13 +241,12 @@ export class CrossChainMessaging {
     message: string
     recipient: string
   }): Promise<{ sourceTxHash: string; messageId: string }> {
-    // Switch to source chain
+   
     await this.blockchain.switchChain(params.sourceChain)
 
-    // Get Hyperlane Mailbox contract address for source chain
+    // Getting Hyperlane Mailbox contract address for source chain
     const mailboxAddress = this.getMailboxAddress(params.sourceChain)
 
-    // Encode the dispatch function call
     const dispatchData = this.encodeDispatchCall(params.destinationChain, params.recipient, params.message)
 
     // Send transaction to Hyperlane Mailbox

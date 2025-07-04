@@ -1,6 +1,5 @@
 "use client"
 
-// Ensure this file is treated as a module
 export {}
 
 import { useState, useEffect, useCallback } from "react"
